@@ -1,0 +1,58 @@
+body {
+    font-family: 'Calibri';
+    background-color: lightyellow;
+}
+
+h2 {
+    margin: 5px;
+}
+
+p {
+    margin: 5px;
+    font-size: small;
+}
+
+.pos {
+    color: green;
+    font-weight: bold;
+}
+
+.neg {
+    color: red;
+    font-weight: bold;
+}
+
+#textinfo {
+    border: solid 1.5px #444;
+    margin: 5px;
+    background-color: white;
+    padding: 5px;
+    display: inline-block;
+    min-width: 152px;
+}
+
+#codeinput {
+    margin: 5px;
+}
+
+.mbutton {
+    margin: 5px;
+    font-family: 'Calibri';
+    color: white;
+    border: none;
+    background: #444;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 7px;
+    padding: 2.5px 5px;
+}
+
+#hintlabel {
+    margin:5px;
+}
+
+#hinttime {
+    margin: 5px;
+    font-family: 'Orbitron', sans-serif;
+}
