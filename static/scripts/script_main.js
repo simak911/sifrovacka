@@ -1,3 +1,6 @@
+var last_call = Date.now();
+const wait_time = 30;
+
 function getTeamName(){
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('tname');
@@ -24,29 +27,32 @@ async function getHintTimes(){
   }
 }
 
-document.getElementById("confirm").addEventListener("click", function() {
-    const teamname = getTeamName();
-    const levelcode = document.getElementById("levelcode").value;
-    const baseurl = window.location.origin;
-    if (teamname && levelcode) {
-      const url = `${baseurl}/entered?code=${levelcode}&tname=${teamname}`;
-      window.open(url, "_self");
-    } else {
-      alert("Please fill in level code.");
-    }
+document.getElementById("confirm").addEventListener("click", function() {   
+      last_call = Date.now();
+      const teamname = getTeamName();
+      const levelcode = document.getElementById("levelcode").value;
+      const baseurl = window.location.origin;
+      if (teamname && levelcode) {
+        const url = `${baseurl}/entered?code=${levelcode}&tname=${teamname}`;
+        window.open(url, "_self");
+      } 
+      else {
+        alert("Please fill in level code.");
+      }
   });
 
-document.getElementById("showimg").addEventListener("click", function(){
-    const teamname = getTeamName();
-    url = window.location.origin + '/get-img' + `?tname=${teamname}`;
-    window.open(url, "_blank");
-});
-
-document.getElementById("showhint").addEventListener("click", function(){
-    const teamname = getTeamName();
-    url = window.location.origin + '/get-hint' + `?tname=${teamname}`;
-    window.open(url, "_blank");
-});
-
-getHintTimes();
-setInterval(getHintTimes, 500);
+document.getElementById("refreshbut").addEventListener("click", function() {
+    const cooldown = (Date.now() - last_call);
+    if (cooldown > wait_time * 1000) {
+      const baseurl = window.location.origin;
+      const teamname = getTeamName();
+      if (teamname) {
+        const url = `${baseurl}/get-hint?tname=${teamname}`;
+        window.open(url, "_self")
+      }
+    }
+    else {
+      const staystill = Math.floor(wait_time - cooldown / 1000)
+      alert(`Cooldown - please wait ${staystill} seconds.`)
+    }
+})

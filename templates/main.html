@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZNÁŠ NERA WEB APP</title>
+    <title>ŠIFROVAČKA WEB APP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h2>ZNÁŠ NERA 6?</h2>
+    <h2>JBC CODE 2025</h2>
     <p>Team name: {{tn}}</p>
     <div id="codeinput">
         <input id="levelcode" type="text" placeholder="Level code.">    
@@ -16,11 +16,8 @@
     </div>
     <div id ="textinfo" class={{msgcolor}}>Info: {{msg}}</div>
     <div>
-        <button class="mbutton" id="showimg">SHOW PHOTO</button>
-        <button class="mbutton" id="showhint">SHOW HINT</button>
+        <button class="mbutton" id="refreshbut">REFRESH HINT</button>
     </div>
-    <div id="hintlabel"></div>
-    <div id="hinttime"></div>
     <script src="{{ url_for('static', filename='scripts/script_main.js') }}"></script>
 </body>
 </html>

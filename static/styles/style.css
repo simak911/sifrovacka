@@ -29,6 +29,7 @@ p {
     padding: 5px;
     display: inline-block;
     min-width: 152px;
+    white-space: pre-line;
 }
 
 #codeinput {
