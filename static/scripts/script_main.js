@@ -1,33 +1,22 @@
 var last_call = Date.now();
-const wait_time = 30;
 
 function getTeamName(){
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('tname');
 }
 
-async function getHintTimes(){
+async function init() {
   const baseurl = window.location.origin;
-  const teamname = getTeamName();
-  const url = `${baseurl}/get-hinttimes?tname=${teamname}`;
+  const url = `${baseurl}/getconfig`;
   const response = await fetch(url);
-  const json = await response.json();
-  const status = json.status
-  if (status === 'valid') {
-    const htime = json.htime;
-    const hnumber = json.hnumber;
-    if (hnumber !== 0){
-      document.getElementById("hintlabel").innerHTML = `Time for the ${hnumber}. hint:`;
-      document.getElementById("hinttime").innerHTML = `${htime}`;
-    }
-    else {
-      document.getElementById("hintlabel").innerHTML = '';
-      document.getElementById("hinttime").innerHTML = '';
-    }
-  }
+  const json = await response.json(); 
+  const speed = json.speed;
+  const wait_time = Math.floor(20 / speed);
+  setListeners(wait_time);
 }
 
-document.getElementById("confirm").addEventListener("click", function() {   
+function setListeners(wait_time){
+  document.getElementById("confirm").addEventListener("click", function() {   
       last_call = Date.now();
       const teamname = getTeamName();
       const levelcode = document.getElementById("levelcode").value;
@@ -41,7 +30,7 @@ document.getElementById("confirm").addEventListener("click", function() {
       }
   });
 
-document.getElementById("refreshbut").addEventListener("click", function() {
+  document.getElementById("refreshbut").addEventListener("click", function() {
     const cooldown = (Date.now() - last_call);
     if (cooldown > wait_time * 1000) {
       const baseurl = window.location.origin;
@@ -55,4 +44,7 @@ document.getElementById("refreshbut").addEventListener("click", function() {
       const staystill = Math.floor(wait_time - cooldown / 1000)
       alert(`Cooldown - please wait ${staystill} seconds.`)
     }
-})
+  })
+}
+
+init()

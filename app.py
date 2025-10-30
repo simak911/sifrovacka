@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, send_file, g
 from waitress import serve
 import time, os
-import csv
+import csv, json, math
 
 def format(text):
     text = text.replace(" ", "").lower()
@@ -49,7 +49,7 @@ def getteamsdata(lines):
             teams[uid] = team
     return teams
 
-def gethintdata(lines):
+def gethintdata(lines, speed):
     stages = {}
     for line in lines:
         stage_id = numberize(line[0])
@@ -59,6 +59,7 @@ def gethintdata(lines):
             if i%2 == 0:
                 hint_text = line[i]
                 hint_time = numberize(line[i+1])
+                hint_time = math.ceil(hint_time / speed)
                 hint = {"text": hint_text, "time": hint_time}
                 if hint["text"] != "":
                     hints.append(hint)
@@ -75,10 +76,11 @@ class Team():
 
 class GlobalVariables():
     def __init__(self):
+        self.config = json.load(open("./data/config.json", encoding="utf-8"))
         self.teams = getteamsdata(readit("./data/teams.csv"))
         self.uids = list(self.teams.keys())
-        self.stages = gethintdata(readit("./data/hints.csv"))
-        self.admcode = 'lucienjeborec'  
+        self.stages = gethintdata(readit("./data/hints.csv"), self.config['speed'])
+        self.admcode = 'bidlo42'       
 
 gv = GlobalVariables()
 
@@ -122,6 +124,10 @@ app = Flask(__name__)
 def get_login_page():
     return render_template('index.html', msg='', msgcolor='neut')
 
+@app.route('/getconfig')
+def get_config():
+    return gv.config
+
 @app.route('/main')
 def get_main_page():
     uid = format(request.args.get('tname'))
@@ -142,20 +148,16 @@ def entered():
             stagecode = stage['code']
             if code == stagecode:
                 levelid = int(stageid)
-                gv.teams[uid].level = levelid
-                if levelid < 0:
-                    (hintstring, status) = get_hint_string(uid)
-                    color = 'neg'
-                    if status: color = 'pos'
-                    return render_template('main.html', msg='Success! \n \n' + hintstring, msgcolor=color, tn=gettn(uid))
-                elif not (stageid in gv.teams[uid].stats.keys()):
+                lastlevelid = gv.teams[uid].level
+                if levelid < 0 and levelid == lastlevelid or levelid > 0 and stageid in gv.teams[uid].stats.keys():
+                    return render_template('main.html', msg='Code already entered', msgcolor='neg', tn=gettn(uid))
+                else:
+                    gv.teams[uid].level = levelid
                     gv.teams[uid].stats[stageid] = gettimestamp()
                     (hintstring, status) = get_hint_string(uid)
                     color = 'neg'
                     if status: color = 'pos'
-                    return render_template('main.html', msg='Success! \n \n' + hintstring, msgcolor=color, tn=gettn(uid)) 
-                else:
-                    return render_template('main.html', msg='Code already entered', msgcolor='neg', tn=gettn(uid)) 
+                    return render_template('main.html', msg='Success! \n \n' + hintstring, msgcolor=color, tn=gettn(uid))
         return render_template("main.html", msg="Code not found.", msgcolor='neg', tn=gettn(uid))          
     else:
         return render_template("main.html", msg="Team not found.", msgcolor='neg', tn="")
