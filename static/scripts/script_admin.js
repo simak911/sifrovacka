@@ -19,5 +19,5 @@ document.getElementById("statsbutton").addEventListener("click", function() {
     const teamname = getTeamName();
     const baseurl = window.location.origin;
     const url = `${baseurl}/get-stats?tname=${teamname}`;
-    window.open(url, "_blank");
+    window.open(url, "_self");
   });

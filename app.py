@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, g
+from flask import Flask, render_template, request, g
 from waitress import serve
 import time, os
 import csv, json, math
@@ -17,13 +17,18 @@ def timestamptostring(ts):
     s = lts.tm_sec
     return f"{h:02d}:{m:02d}:{s:02d}"
 
-def tostring(list):
-    s = ''
-    for elem in list:
-        s+=str(elem)+';'
-    s=s[:-1]
-    s+='\n'
-    return s
+def tabletostring(headerline, lines):
+    content = ''
+    th = ''
+    for elem in headerline:
+        th += f'<th>{elem}</th>'
+    content += f'<tr>{th}</tr>'    
+    for row in lines:
+        tr = ''
+        for elem in row:
+            tr += f'<td>{elem}</td>'
+        content += f'<tr>{tr}</tr>'
+    return f'<table id="restable">{content}</table>'
 
 def numberize(text):
     try:
@@ -132,7 +137,7 @@ def get_config():
 def get_main_page():
     uid = format(request.args.get('tname'))
     if uid == gv.admcode:
-        return render_template('admin.html', msg='Logged into admin menu.', msgcolor='pos')
+        return render_template('admin.html', msg='Info: Logged into admin menu.', msgcolor='pos')
     elif uid in gv.uids:
         return render_template('main.html', msg='Successful login.', msgcolor='pos', tn=gettn(uid))   
     else:
@@ -158,7 +163,7 @@ def entered():
                     color = 'neg'
                     if status: color = 'pos'
                     return render_template('main.html', msg='Success! \n \n' + hintstring, msgcolor=color, tn=gettn(uid))
-        return render_template("main.html", msg="Code not found.", msgcolor='neg', tn=gettn(uid))          
+        return render_template("main.html", msg="Code not found.", msgcolor='neg', tn=gettn(uid))
     else:
         return render_template("main.html", msg="Team not found.", msgcolor='neg', tn="")
 
@@ -181,12 +186,12 @@ def get_hint():
 def get_stats():
     adminid = format(request.args.get('tname'))
     if adminid == gv.admcode:
-        f = open('./temp.csv', 'w', encoding='utf-8')
-        firstline = ['name']
+        header = '<h2 id="tableheader">Results: \n </h2>'
+        firstline = ['Team name']
         for stageid in gv.stages.keys():
             if int(stageid) > 0:
                 firstline.append(stageid)
-        f.write(tostring(firstline))
+        lines = []
         for uid in gv.teams.keys():
             name = gv.teams[uid].name
             line = [name]
@@ -195,9 +200,9 @@ def get_stats():
                     line.append(timestamptostring(gv.teams[uid].stats[key]))
                 else:
                     line.append('-')
-            f.write(tostring(line))
-        f.close()
-        return send_file('./temp.csv', mimetype='text/csv', as_attachment=True, download_name='stats.csv')          
+            lines.append(line)
+        stringtable = tabletostring(firstline, lines)
+        return render_template('admin.html', msg=header + stringtable, msgcolor='neut')          
     else:
         return render_template('index.html', msg='You have no power here.', msgcolor = 'neg')
 
@@ -209,9 +214,9 @@ def reset_game():
         if resetuid in gv.uids:
             gv.teams[resetuid].stats = {}
             gv.teams[resetuid].level = 0
-            return render_template('admin.html', msg=f'Team {gv.teams[resetuid].name} reseted.', msgcolor='pos')
+            return render_template('admin.html', msg=f'Info: Team {gv.teams[resetuid].name} reseted.', msgcolor='pos')
         else:
-            return render_template('admin.html', msg=f'Team id not found.', msgcolor='neg')
+            return render_template('admin.html', msg=f'Info: Team id not found.', msgcolor='neg')
     else:
         return render_template('index.html', msg='You have no power here.', msgcolor = 'neg')
 

@@ -16,7 +16,7 @@
     <div>
     <button id="statsbutton" class="mbutton">SHOW STATS</button>
     </div>
-    <div id = "textinfo" class={{msgcolor}}>Info: {{msg}}</div>
+    <div id = "textinfo" class={{msgcolor}}>{{msg | safe}}</div>
     <script src="{{ url_for('static', filename='scripts/script_admin.js') }}"></script>
 </body>
 </html>

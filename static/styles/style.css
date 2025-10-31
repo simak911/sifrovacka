@@ -57,3 +57,13 @@ p {
     margin: 5px;
     font-family: 'Orbitron', sans-serif;
 }
+
+#restable {
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+#restable td, th {
+    border: 1px solid black;
+    padding: 4px;
+}
