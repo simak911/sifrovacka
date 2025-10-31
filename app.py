@@ -2,20 +2,17 @@ from flask import Flask, render_template, request, g
 from waitress import serve
 import time, os
 import csv, json, math
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 def format(text):
     text = text.replace(" ", "").lower()
     return text
 
-def gettimestamp():
-    return round(time.time())
-
-def timestamptostring(ts):
-    lts = time.localtime(ts)
-    h = lts.tm_hour 
-    m = lts.tm_min
-    s = lts.tm_sec
-    return f"{h:02d}:{m:02d}:{s:02d}"
+def gettimeobj():
+    zone = ZoneInfo("Europe/Prague")
+    timeobj = datetime.now(zone)
+    return timeobj
 
 def tabletostring(headerline, lines):
     content = ''
@@ -98,8 +95,8 @@ def get_hint_string(uid):
         level = gv.teams[uid].level
         stringlevel = str(level)
         timeonlevel = gv.teams[uid].stats[stringlevel]
-        timenow = gettimestamp()
-        timewait = timenow - timeonlevel
+        timenow = gettimeobj()
+        timewait = (timenow - timeonlevel).total_seconds()
 
         #how many hints should they get
         hints = gv.stages[stringlevel]["hints"]
@@ -115,8 +112,8 @@ def get_hint_string(uid):
                 hintstext += f"{i+1}. nápověda: \n {hinttext} \n \n"
             else:
                 missingtime = hints[i]['time'] - timewait
-                nexthinttime = timenow + missingtime
-                stringtime = timestamptostring(nexthinttime)
+                nexthinttime = timenow + timedelta(seconds=missingtime)
+                stringtime = nexthinttime.strftime("%H:%M:%S")
                 hintstext += f"{i+1}. nápověda: \n Dostaneš ji v {stringtime}"
                 break
         return (hintstext, True)
@@ -158,7 +155,7 @@ def entered():
                     return render_template('main.html', msg='Code already entered', msgcolor='neg', tn=gettn(uid))
                 else:
                     gv.teams[uid].level = levelid
-                    gv.teams[uid].stats[stageid] = gettimestamp()
+                    gv.teams[uid].stats[stageid] = gettimeobj()
                     (hintstring, status) = get_hint_string(uid)
                     color = 'neg'
                     if status: color = 'pos'
@@ -197,7 +194,8 @@ def get_stats():
             line = [name]
             for key in firstline[1:]:
                 if key in gv.teams[uid].stats.keys():
-                    line.append(timestamptostring(gv.teams[uid].stats[key]))
+                    timestring = gv.teams[uid].stats[key].strftime("%H:%M:%S")
+                    line.append(timestring)
                 else:
                     line.append('-')
             lines.append(line)
