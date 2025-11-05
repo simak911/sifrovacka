@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, g
 from waitress import serve
 import time, os
-import csv, json, math
+from helper import Helper
 
 def format(text):
     text = text.replace(" ", "").lower()
@@ -30,63 +30,14 @@ def tabletostring(headerline, lines):
         content += f'<tr>{tr}</tr>'
     return f'<table id="restable">{content}</table>'
 
-def numberize(text):
-    try:
-        return int(text)
-    except:
-        return 0
-
-def readit(file_path):
-    f = open(file_path, encoding = 'utf-8')
-    r = csv.reader(f, delimiter=';')
-    lines = []
-    for line in r:
-        lines.append(line)
-    return lines
-
-def getteamsdata(lines):
-    teams = {}
-    for line in lines:
-        if len(line) == 2:
-            name = format(line[0])
-            uid = format(line[1])
-            team = Team(name, uid)
-            teams[uid] = team
-    return teams
-
-def gethintdata(lines, speed):
-    stages = {}
-    for line in lines:
-        stage_id = numberize(line[0])
-        code = format(line[1])
-        hints = []
-        for i in range(2, len(line)-1):
-            if i%2 == 0:
-                hint_text = line[i]
-                hint_time = numberize(line[i+1])
-                hint_time = math.ceil(hint_time / speed)
-                hint = {"text": hint_text, "time": hint_time}
-                if hint["text"] != "":
-                    hints.append(hint)
-        if stage_id != 0:
-            stages[str(stage_id)] = {"code": code, "hints": hints}
-    return stages
-
-class Team():
-    def __init__(self, name, uid):
-        self.name = name
-        self.uid = uid
-        self.level = 0
-        self.stats = {}
+h = Helper()
 
 class GlobalVariables():
     def __init__(self):
-        self.config = json.load(open("./data/config.json", encoding="utf-8"))
-        self.teams = getteamsdata(readit("./data/teams.csv"))
-        self.uids = list(self.teams.keys())
-        self.stages = gethintdata(readit("./data/hints.csv"), self.config['speed'])
-        self.admcode = 'bidlo42' 
-
+        storage = h.loaddata()
+        for name, value in storage.items():
+            setattr(self, name, value)
+        
 gv = GlobalVariables()
 
 def gettn(uid):
@@ -128,10 +79,6 @@ app = Flask(__name__)
 @app.route('/index')
 def get_login_page():
     return render_template('index.html', msg='', msgcolor='neut')
-
-@app.route('/getconfig')
-def get_config():
-    return gv.config
 
 @app.route('/main')
 def get_main_page():
