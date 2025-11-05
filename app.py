@@ -85,7 +85,7 @@ class GlobalVariables():
         self.teams = getteamsdata(readit("./data/teams.csv"))
         self.uids = list(self.teams.keys())
         self.stages = gethintdata(readit("./data/hints.csv"), self.config['speed'])
-        self.admcode = 'bidlo42'       
+        self.admcode = 'bidlo42' 
 
 gv = GlobalVariables()
 
