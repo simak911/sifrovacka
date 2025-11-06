@@ -39,6 +39,7 @@ def readit(file_path):
     lines = []
     for line in r:
         lines.append(line)
+    lines = lines[1:]
     return lines
 
 def getteamsdata(lines):
