@@ -76,26 +76,16 @@ class Helper:
         stages = self.gethintdata(self.readit("./data/hints.csv"), config['speed'])
         teams = self.getteamsdata(self.readit("./data/teams.csv"))
         uids = list(teams.keys())
-        admincode = config['admincode']
+        admcode = config['admcode']
         lang = config['lang']
         trans = self.gettransdata(self.readit("./data/trans.csv"))
-        vars = [stages, teams, uids, admincode, lang, trans]
+        vars = [stages, teams, uids, admcode, lang, trans]
         return {
+            'config': config,
             'stages': stages,
             'teams': teams,
             'uids': uids,
-            'admincode': admincode,
+            'admcode': admcode,
             'lang': lang,
             'trans': trans
         }
-        
-if __name__ == '__main__':
-    class GlobalVariables:
-        def __init__(self):
-            self.h = Helper()
-            self.storage = self.h.loaddata()
-            for name, value in self.storage.items():
-                setattr(self, name, value)
-            print(self.trans)
-
-    gv = GlobalVariables()

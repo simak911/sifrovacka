@@ -16,6 +16,6 @@ document.getElementById("loginbutton").addEventListener("click", function() {
       window.open(url, "_self");  // Navigate to the constructed URL
     } 
     else {
-      alert("Please fill in team id.");
+      alert("Team id error.");
     }
   });

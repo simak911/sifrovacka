@@ -1,5 +1,23 @@
-TATO RADKA JE K NICEMU
+TATO ŘÁDKA JE K NIČEMU;;
 var;cs;en
 pozdrav;ahoj;hello
 jidlo;ovoce;fruit
 jmeno;Jirka;George
+nohints;Nápovědy nejsou zatím k dispozici. Zadej kód stanoviště.;No hints. Try entering code first.
+hint;nápověda;hint
+gethint;Dostaneš ji v;You will get it at
+logamenu;Info: Přihlášení do admin menu.;Info: Logged into admin menu.
+logmenu;Přihlášení bylo úspěšné;Successful login.
+teamiderr;Přihlašovací kód neexistuje.;Wrong team ID.
+repeatcode;Tento kód jste již zadali;Code already entered
+suc;Úspěch!;Success!
+codeerr;Špatný kód stanoviště.;Code not found.
+teamerr;Tým nenalezen.;Team not found.
+res;Výsledky:;Results:
+tn;Název týmu;Team name
+noadmin;Nejsi admin, táhni!;You have no power here.
+t;Tým;Team
+reset;obnoven.;reseted.
+gh;OBNOVENÍ NÁPOVĚDY;GET HINT
+st;STATISTIKY;SHOW STATS
+rg;VYMAZAT POSTUP TÝMU;RESET TEAM
