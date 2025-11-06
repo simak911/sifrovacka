@@ -1,3 +1,10 @@
+const elem = document.getElementById('teamid');
+elem.value = localStorage.getItem('teamid') || '';
+
+elem.addEventListener('input', () => {
+  localStorage.setItem('teamid', elem.value);
+});
+
 document.getElementById("loginbutton").addEventListener("click", function() {
     // Get the values from the input fields
     const teamid = document.getElementById("teamid").value;
@@ -9,6 +16,6 @@ document.getElementById("loginbutton").addEventListener("click", function() {
       window.open(url, "_self");  // Navigate to the constructed URL
     } 
     else {
-      alert("Please fill in team id.");
+      alert("Team id error.");
     }
   });

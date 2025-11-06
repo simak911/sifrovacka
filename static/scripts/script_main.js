@@ -12,10 +12,17 @@ async function init() {
   const json = await response.json(); 
   const speed = json.speed;
   const wait_time = Math.floor(20 / speed);
-  setListeners(wait_time);
+  const lang = json.lang;
+  var errtext = "Please fill in level code."
+  var waittext = "Please wait "
+  if (lang == "cs") {
+    errtext = "Prosím vyplň kolonku s kódem stanoviště."
+    waittext = "Prosím čekej "
+  }  
+  setListeners(wait_time, errtext);
 }
 
-function setListeners(wait_time){
+function setListeners(wait_time, errtext){
   document.getElementById("confirm").addEventListener("click", function() {   
       last_call = Date.now();
       const teamname = getTeamName();
@@ -26,7 +33,7 @@ function setListeners(wait_time){
         window.open(url, "_self");
       } 
       else {
-        alert("Please fill in level code.");
+        alert(errtext);
       }
   });
 
@@ -42,7 +49,7 @@ function setListeners(wait_time){
     }
     else {
       const staystill = Math.floor(wait_time - cooldown / 1000)
-      alert(`Cooldown - please wait ${staystill} seconds.`)
+      alert(`${waittext} ${staystill} s.`)
     }
   })
 }

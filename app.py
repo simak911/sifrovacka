@@ -1,21 +1,18 @@
 from flask import Flask, render_template, request, g
 from waitress import serve
-import time, os
-import csv, json, math
+import os
+from helper import Helper
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 def format(text):
     text = text.replace(" ", "").lower()
     return text
 
-def gettimestamp():
-    return round(time.time())
-
-def timestamptostring(ts):
-    lts = time.localtime(ts)
-    h = lts.tm_hour 
-    m = lts.tm_min
-    s = lts.tm_sec
-    return f"{h:02d}:{m:02d}:{s:02d}"
+def gettimeobj():
+    zone = ZoneInfo("Europe/Prague")
+    timeobj = datetime.now(zone)
+    return timeobj
 
 def tabletostring(headerline, lines):
     content = ''
@@ -30,67 +27,16 @@ def tabletostring(headerline, lines):
         content += f'<tr>{tr}</tr>'
     return f'<table id="restable">{content}</table>'
 
-def numberize(text):
-    try:
-        return int(text)
-    except:
-        return 0
-
-def readit(file_path):
-    f = open(file_path, encoding = 'utf-8')
-    r = csv.reader(f, delimiter=';')
-    lines = []
-    for line in r:
-        lines.append(line)
-    return lines
-
-def getteamsdata(lines):
-    teams = {}
-    for line in lines:
-        if len(line) == 2:
-            name = format(line[0])
-            uid = format(line[1])
-            team = Team(name, uid)
-            teams[uid] = team
-    return teams
-
-def gethintdata(lines, speed):
-    stages = {}
-    for line in lines:
-        stage_id = numberize(line[0])
-        code = format(line[1])
-        hints = []
-        for i in range(2, len(line)-1):
-            if i%2 == 0:
-                hint_text = line[i]
-                hint_time = numberize(line[i+1])
-                hint_time = math.ceil(hint_time / speed)
-                hint = {"text": hint_text, "time": hint_time}
-                if hint["text"] != "":
-                    hints.append(hint)
-        if stage_id != 0:
-            stages[str(stage_id)] = {"code": code, "hints": hints}
-    return stages
-
-class Team():
-    def __init__(self, name, uid):
-        self.name = name
-        self.uid = uid
-        self.level = 0
-        self.stats = {}
+h = Helper()
 
 class GlobalVariables():
     def __init__(self):
-        self.config = json.load(open("./data/config.json", encoding="utf-8"))
-        self.teams = getteamsdata(readit("./data/teams.csv"))
-        self.uids = list(self.teams.keys())
-        self.stages = gethintdata(readit("./data/hints.csv"), self.config['speed'])
-        self.admcode = 'bidlo42'       
-
+        storage = h.loaddata()
+        for name, value in storage.items():
+            setattr(self, name, value)
+        
 gv = GlobalVariables()
 
-def gettn(uid):
-    return gv.teams[uid].name
 
 
 def get_hint_string(uid):
@@ -98,30 +44,39 @@ def get_hint_string(uid):
         level = gv.teams[uid].level
         stringlevel = str(level)
         timeonlevel = gv.teams[uid].stats[stringlevel]
-        timenow = gettimestamp()
-        timewait = timenow - timeonlevel
+        timenow = gettimeobj()
+        timewait = (timenow - timeonlevel).total_seconds()
 
         #how many hints should they get
         hints = gv.stages[stringlevel]["hints"]
         hintstext = ""
 
         if len(hints) < 1:
-            return ("No hints. Try entering code first.", False)
+            return (t("nohints"), False)
 
         for i in range (len(hints)):
             if timewait > hints[i]['time']:
                 timewait -= hints[i]['time']
                 hinttext = hints[i]['text']
-                hintstext += f"{i+1}. nápověda: \n {hinttext} \n \n"
+                hintstext += f"{i+1}. {t("hint")}: \n {hinttext} \n \n"
             else:
                 missingtime = hints[i]['time'] - timewait
-                nexthinttime = timenow + missingtime
-                stringtime = timestamptostring(nexthinttime)
-                hintstext += f"{i+1}. nápověda: \n Dostaneš ji v {stringtime}"
+                nexthinttime = timenow + timedelta(seconds=missingtime)
+                stringtime = nexthinttime.strftime("%H:%M:%S")
+                hintstext += f"{i+1}. {t("hint")}: \n {t("gethint")} {stringtime}"
                 break
         return (hintstext, True)
     except:
-        return ("No hints. Try entering code first.", False)
+        return (t("nohints"), False)
+
+def t(term):
+    try:
+        return gv.trans[term][gv.lang]
+    except:
+        return f'Translation error, {term}'
+
+def gettn(uid):
+    return f"{t("tn")}: {gv.teams[uid].name}"
 
 app = Flask(__name__)
 @app.route('/')
@@ -129,19 +84,21 @@ app = Flask(__name__)
 def get_login_page():
     return render_template('index.html', msg='', msgcolor='neut')
 
-@app.route('/getconfig')
-def get_config():
-    return gv.config
-
 @app.route('/main')
 def get_main_page():
     uid = format(request.args.get('tname'))
     if uid == gv.admcode:
-        return render_template('admin.html', msg='Info: Logged into admin menu.', msgcolor='pos')
+        return render_template('admin.html', msg=t("logamenu"), msgcolor='pos', rg = t('rg'), st = t('st'))
     elif uid in gv.uids:
-        return render_template('main.html', msg='Successful login.', msgcolor='pos', tn=gettn(uid))   
+        return render_template('main.html', msg=t('logmenu'), msgcolor='pos', tn=gettn(uid), gh = t('gh'))   
     else:
-        return render_template('index.html', msg='Wrong team ID.', msgcolor='neg')
+        return render_template('index.html', msg=t('teamiderr'), msgcolor='neg')
+
+@app.route('/getconfig')
+def get_config():
+    return gv.config
+
+
 
 @app.route('/entered')
 def entered():
@@ -155,17 +112,17 @@ def entered():
                 levelid = int(stageid)
                 lastlevelid = gv.teams[uid].level
                 if levelid < 0 and levelid == lastlevelid or levelid > 0 and stageid in gv.teams[uid].stats.keys():
-                    return render_template('main.html', msg='Code already entered', msgcolor='neg', tn=gettn(uid))
+                    return render_template('main.html', msg=t("repeatcode"), msgcolor='neg', tn=gettn(uid), gh = t('gh'))
                 else:
                     gv.teams[uid].level = levelid
-                    gv.teams[uid].stats[stageid] = gettimestamp()
+                    gv.teams[uid].stats[stageid] = gettimeobj()
                     (hintstring, status) = get_hint_string(uid)
                     color = 'neg'
                     if status: color = 'pos'
-                    return render_template('main.html', msg='Success! \n \n' + hintstring, msgcolor=color, tn=gettn(uid))
-        return render_template("main.html", msg="Code not found.", msgcolor='neg', tn=gettn(uid))
+                    return render_template('main.html', msg=f'{t('suc')} \n \n + {hintstring}', msgcolor=color, tn=gettn(uid), gh = t('gh'))
+        return render_template("main.html", msg=t("codeerr"), msgcolor='neg', tn=gettn(uid), gh = t('gh'))
     else:
-        return render_template("main.html", msg="Team not found.", msgcolor='neg', tn="")
+        return render_template("main.html", msg=t('teamerr'), msgcolor='neg', tn="", gh = t('gh'))
 
 @app.route('/get-hint')
 def get_hint():
@@ -174,20 +131,20 @@ def get_hint():
         (hintstring, status) = get_hint_string(uid)
         color = 'neg'
         if status: color = 'neut'
-        return render_template('main.html', msg=f'\n \n {hintstring}', msgcolor=color, tn=gettn(uid))
+        return render_template('main.html', msg=f'\n \n {hintstring}', msgcolor=color, tn=gettn(uid), gh = t('gh'))
     except:
         try:
             uid = format(request.args.get('tname'))
-            return render_template('main.html', msg='', msgcolor='neut', tn=gettn(uid))
+            return render_template('main.html', msg='', msgcolor='neut', tn=gettn(uid), gh = t('gh'))
         except:
-            return render_template('main.html', msg='Invalid teamname.', msgcolor='neg', tn=gettn(uid))
+            return render_template('main.html', msg=t('teamerr'), msgcolor='neg', tn=gettn(uid), gh = t('gh'))
 
 @app.route('/get-stats')
 def get_stats():
     adminid = format(request.args.get('tname'))
     if adminid == gv.admcode:
-        header = '<h2 id="tableheader">Results: \n </h2>'
-        firstline = ['Team name']
+        header = f'<h2 id="tableheader">{t('res')} \n </h2>'
+        firstline = [t('tn')]
         for stageid in gv.stages.keys():
             if int(stageid) > 0:
                 firstline.append(stageid)
@@ -197,14 +154,15 @@ def get_stats():
             line = [name]
             for key in firstline[1:]:
                 if key in gv.teams[uid].stats.keys():
-                    line.append(timestamptostring(gv.teams[uid].stats[key]))
+                    timestring = gv.teams[uid].stats[key].strftime("%H:%M:%S")
+                    line.append(timestring)
                 else:
                     line.append('-')
             lines.append(line)
         stringtable = tabletostring(firstline, lines)
-        return render_template('admin.html', msg=header + stringtable, msgcolor='neut')          
+        return render_template('admin.html', msg=header + stringtable, msgcolor='neut', rg = t('rg'), st = t('st'))          
     else:
-        return render_template('index.html', msg='You have no power here.', msgcolor = 'neg')
+        return render_template('index.html', msg=t('noadmin'), msgcolor = 'neg')
 
 @app.route('/reset-game')
 def reset_game():
@@ -214,11 +172,11 @@ def reset_game():
         if resetuid in gv.uids:
             gv.teams[resetuid].stats = {}
             gv.teams[resetuid].level = 0
-            return render_template('admin.html', msg=f'Info: Team {gv.teams[resetuid].name} reseted.', msgcolor='pos')
+            return render_template('admin.html', msg=f'{t('t')} {gv.teams[resetuid].name} {t('reset')}', msgcolor='pos', rg = t('rg'), st = t('st'))
         else:
-            return render_template('admin.html', msg=f'Info: Team id not found.', msgcolor='neg')
+            return render_template('admin.html', msg=t('teamerr'), msgcolor='neg', rg = t('rg'), st = t('st'))
     else:
-        return render_template('index.html', msg='You have no power here.', msgcolor = 'neg')
+        return render_template('index.html', msg=t('noadmin'), msgcolor = 'neg')
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

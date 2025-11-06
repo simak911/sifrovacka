@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ŠIFROVAČKA WEB APP</title>
+    <title>GAME APP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
     
 </head>
@@ -11,10 +11,10 @@
     <h2>JBC CODE 2025</h2>
     <div id="codeinput">
         <input id="teamid" type="text" placeholder="Team ID.">
-        <button id="resetbutton" class="mbutton">RESET GAME</button>
+        <button id="resetbutton" class="mbutton">{{rg}}</button>
     </div>
     <div>
-    <button id="statsbutton" class="mbutton">SHOW STATS</button>
+    <button id="statsbutton" class="mbutton">{{st}}</button>
     </div>
     <div id = "textinfo" class={{msgcolor}}>{{msg | safe}}</div>
     <script src="{{ url_for('static', filename='scripts/script_admin.js') }}"></script>
