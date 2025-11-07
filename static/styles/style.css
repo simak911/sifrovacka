@@ -67,3 +67,11 @@ p {
     border: 1px solid black;
     padding: 4px;
 }
+
+#devinfo {
+    color: purple;
+    font-size: large;
+    font-weight: bold;
+    max-width: 300px;
+
+}
