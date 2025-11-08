@@ -172,13 +172,16 @@ def get_hint():
         (hintstring, status) = get_hint_string(uid)
         color = 'neg'
         if status: color = 'neut'
-        return render_template('main.html', msg=f'\n \n {hintstring}', msgcolor=color, tn=gettn(uid))
+        return {
+            'msg': f'\n \n {hintstring}',
+            'suc': color
+        }
     except:
         try:
             uid = format(request.args.get('tname'))
-            return render_template('main.html', msg='', msgcolor='neut', tn=gettn(uid))
+            return {'msg': '', 'suc': 'neut'}
         except:
-            return render_template('main.html', msg='Tým neexistuje.', msgcolor='neg', tn=gettn(uid))
+            return {'msg': 'Tým neexistuje.', 'suc': 'neg'}
 
 @app.route('/get-stats')
 def get_stats():
