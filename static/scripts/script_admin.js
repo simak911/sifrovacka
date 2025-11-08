@@ -11,7 +11,7 @@ document.getElementById("resetbutton").addEventListener("click", function() {
       const url = `${baseurl}/reset-game?rname=${resetname}&tname=${teamname}`;
       window.open(url, "_self");
     } else {
-      alert("Please fill in team id.");
+      alert("Vyplň kód týmu.");
     }
   });
 

@@ -26,7 +26,7 @@ function setListeners(wait_time){
         window.open(url, "_self");
       } 
       else {
-        alert("Please fill in level code.");
+        alert("Vyplň kód stanoviště.");
       }
   });
 
@@ -42,7 +42,7 @@ function setListeners(wait_time){
     }
     else {
       const staystill = Math.floor(wait_time - cooldown / 1000)
-      alert(`Cooldown - please wait ${staystill} seconds.`)
+      alert(`Prosím počkej ${staystill} sekund a pak klikni.`)
     }
   })
 }

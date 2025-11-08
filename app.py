@@ -104,7 +104,7 @@ def get_hint_string(uid):
         hintstext = ""
 
         if len(hints) < 1:
-            return ("No hints. Try entering code first.", False)
+            return ("Nápovědy nejsou zatím k dispozici. Zadej kód stanoviště.", False)
 
         for i in range (len(hints)):
             if timewait > hints[i]['time']:
@@ -119,7 +119,7 @@ def get_hint_string(uid):
                 break
         return (hintstext, True)
     except:
-        return ("No hints. Try entering code first.", False)
+        return ("Nápovědy nejsou zatím k dispozici. Zadej kód stanoviště", False)
 
 app = Flask(__name__)
 @app.route('/')
@@ -135,11 +135,11 @@ def get_config():
 def get_main_page():
     uid = format(request.args.get('tname'))
     if uid == gv.admcode:
-        return render_template('admin.html', msg='Info: Logged into admin menu.', msgcolor='pos')
+        return render_template('admin.html', msg='Info: Přihlášení do admin menu.', msgcolor='pos')
     elif uid in gv.uids:
-        return render_template('main.html', msg='Successful login.', msgcolor='pos', tn=gettn(uid))   
+        return render_template('main.html', msg='Přihlášení bylo úspěšné.', msgcolor='pos', tn=gettn(uid))   
     else:
-        return render_template('index.html', msg='Wrong team ID.', msgcolor='neg')
+        return render_template('index.html', msg='Přihlašovací kód neexistuje.', msgcolor='neg')
 
 @app.route('/entered')
 def entered():
@@ -153,17 +153,17 @@ def entered():
                 levelid = int(stageid)
                 lastlevelid = gv.teams[uid].level
                 if levelid < 0 and levelid == lastlevelid or levelid > 0 and stageid in gv.teams[uid].stats.keys():
-                    return render_template('main.html', msg='Code already entered', msgcolor='neg', tn=gettn(uid))
+                    return render_template('main.html', msg='Tento kód jste již zadali', msgcolor='neg', tn=gettn(uid))
                 else:
                     gv.teams[uid].level = levelid
                     gv.teams[uid].stats[stageid] = gettimeobj()
                     (hintstring, status) = get_hint_string(uid)
                     color = 'neg'
                     if status: color = 'pos'
-                    return render_template('main.html', msg='Success! \n \n' + hintstring, msgcolor=color, tn=gettn(uid))
-        return render_template("main.html", msg="Code not found.", msgcolor='neg', tn=gettn(uid))
+                    return render_template('main.html', msg='Úspěch! \n \n' + hintstring, msgcolor=color, tn=gettn(uid))
+        return render_template("main.html", msg="Špatný kód stanoviště.", msgcolor='neg', tn=gettn(uid))
     else:
-        return render_template("main.html", msg="Team not found.", msgcolor='neg', tn="")
+        return render_template("main.html", msg="Tým nenalezen.", msgcolor='neg', tn="")
 
 @app.route('/get-hint')
 def get_hint():
@@ -178,14 +178,14 @@ def get_hint():
             uid = format(request.args.get('tname'))
             return render_template('main.html', msg='', msgcolor='neut', tn=gettn(uid))
         except:
-            return render_template('main.html', msg='Invalid teamname.', msgcolor='neg', tn=gettn(uid))
+            return render_template('main.html', msg='Tým neexistuje.', msgcolor='neg', tn=gettn(uid))
 
 @app.route('/get-stats')
 def get_stats():
     adminid = format(request.args.get('tname'))
     if adminid == gv.admcode:
-        header = '<h2 id="tableheader">Results: \n </h2>'
-        firstline = ['Team name']
+        header = '<h2 id="tableheader">Výsledky: \n </h2>'
+        firstline = ['Název týmu']
         for stageid in gv.stages.keys():
             if int(stageid) > 0:
                 firstline.append(stageid)
@@ -203,7 +203,7 @@ def get_stats():
         stringtable = tabletostring(firstline, lines)
         return render_template('admin.html', msg=header + stringtable, msgcolor='neut')          
     else:
-        return render_template('index.html', msg='You have no power here.', msgcolor = 'neg')
+        return render_template('index.html', msg='Nejsi admin, táhni!', msgcolor = 'neg')
 
 @app.route('/reset-game')
 def reset_game():
@@ -213,11 +213,11 @@ def reset_game():
         if resetuid in gv.uids:
             gv.teams[resetuid].stats = {}
             gv.teams[resetuid].level = 0
-            return render_template('admin.html', msg=f'Info: Team {gv.teams[resetuid].name} reseted.', msgcolor='pos')
+            return render_template('admin.html', msg=f'Info: Tým {gv.teams[resetuid].name} obnoven.', msgcolor='pos')
         else:
-            return render_template('admin.html', msg=f'Info: Team id not found.', msgcolor='neg')
+            return render_template('admin.html', msg=f'Info: Tým nenalezen.', msgcolor='neg')
     else:
-        return render_template('index.html', msg='You have no power here.', msgcolor = 'neg')
+        return render_template('index.html', msg='Nejsi admin, táhni!', msgcolor = 'neg')
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
